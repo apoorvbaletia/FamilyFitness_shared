@@ -7,8 +7,8 @@ local json = require("json")
 local url = require("socket.url")
 local baseUrl = "https://api.parse.com/1/classes/"
 local headers = {}
-headers["X-Parse-Application-Id"] = "MyyVvgEqIDrucG1bvJpb6EbyqALo25nc4I6ShCaV" -- your Application-Id
-headers["X-Parse-REST-API-Key"] = "6Xn0iym4WCwu5QL4gBLbEHVi30Td9sfNpjtioRuI" -- your REST-API-Key
+headers["X-Parse-Application-Id"] = "xxx" -- your Application-Id
+headers["X-Parse-REST-API-Key"] = "xxx" -- your REST-API-Key
 headers["X-Parse-Session-Token"] = nil -- session token for altering User object
 headers["Content-Type"] = "application/x-www-form-urlencoded"
 ---Variables are used globally across the file
