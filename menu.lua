@@ -99,7 +99,7 @@ function new(directorParams)
     ------
     buttons["btnNews"] = {}
     buttons["btnNews"].iconFile = "images/scr_main/main-news.png"
-    buttons["btnNews"].text = "Новости"
+    buttons["btnNews"].text = "News"
     buttons["btnNews"].y = 0
     ------
     buttons["btnSched"] = {}
