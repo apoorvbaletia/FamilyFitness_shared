@@ -27,15 +27,23 @@ function new(directorParams)
     if string.sub(system.getInfo("model"),1,2) == "iP" and display.pixelHeight > 960 then iPhone5 = true else iPhone5 = false end
     ---===================VISUAL PART
     -- show the same background for any device with maximum height, if screen is smaller - no prob
-    local bg = display.newImageRect ("images2/blank_bg.jpg", _W, 568);
+    local bg = display.newImageRect ("images/common/bg.png", _W, 568);
     bg:setReferencePoint( display.TopLeftReferencePoint )
     bg.x, bg.y = 0,0;
     localGroup:insert(bg);
+    --topbar
+    local logoImage = display.newImage ("images/common/top-bar.png");
+    logoImage:setReferencePoint( display.TopCenterReferencePoint )
+    logoImage.x = display.contentCenterX
+    logoImage.y = 0
+    
+
     ---Header text
-    local screenHeader = display.newText("Новости", 0, 0, native.systemFontBold, 20)
+    local screenHeader = display.newText("News",0, 0,native.systemFontBold, 25)
+    screenHeader:setTextColor( 130, 130, 130 )
     screenHeader:setReferencePoint( display.CenterReferencePoint )
     screenHeader.x, screenHeader.y = _W/2 , screenHeader_y;
-    localGroup:insert(screenHeader);
+    
     ---One-item-screen elements, by default are located outside of the screen
     local itemHeader = display.newText( "InitialHeader", 0, 0, _W, 0, native.systemFontBold, 16)
     itemHeader.x = 1.5 * _W
@@ -45,130 +53,92 @@ function new(directorParams)
     itemSelected.x = 1.5 * _W
     localGroup:insert( itemSelected )
     ---========Createmain Table view
-    local function getNewsFromDB()
---        here we init list2Show with a data from database
-        local sqlite3 = require "sqlite3"
-        local path = system.pathForFile( dbFilename, system.DocumentsDirectory )
-        local db = sqlite3.open( path )
-        local row2
-        local SQL = "SELECT rowid, fDate, fCaption, fImageName, fText, fShortText from " .. directorParams2.tableName .. " ORDER BY fDate DESC"
-        print("Tablelist SQL: ", SQL)
-        for row2 in db:nrows(SQL) do
-            list2Show["ID_" .. row2.rowid] = {caption = row2.fCaption, image = row2.fImageName, txt = row2.fText }
-            list2Show["ID_" .. row2.rowid].date = row2.fDate
-            list2Show["ID_" .. row2.rowid].shortTxt = row2.fShortText
-            list2Show["ID_" .. row2.rowid].id = "ID_" .. row2.rowid
+    local listOptions = {
+        
+        height = 445,
+    	width = 300,
+        maskFile = "mask-320x366.png"
+    }
+
+    local list = widget.newTableView( listOptions )
+    list:setReferencePoint( display.CenterReferencePoint )
+	list.x = (display.contentWidth * 0.5) 
+    list.y = 20 + display.contentHeight * 0.5
+	
+-- onEvent listener for the tableView
+local function onRowTouch( event )
+        local row = event.target
+        local rowGroup = event.view
+		local background = event.background
+		
+		if event.phase == "press" then
+		print( "Pressed row: " .. row.index )
+		background:setFillColor( 0, 110, 233, 255 ) 
         end
-        db:close()
-    end
-    getNewsFromDB();
-    ----------
-    local function onRowRender( event )
-        local row = event.row
-        local label = "List item "
-        local color = 255
-        local path = system.pathForFile( "", system.DocumentsDirectory )
-        local myW = row.contentWidth
-        local myH = row.contentHeigth
-        print("onRowRender(): list2Show_i[event.row.index].id " .. list2Show_i[event.row.index].id )
-        --        local dataA = list2Show[event.id]
-        local dataA = list2Show[list2Show_i[event.row.index].id]
+		
+        if event.phase == "press" then  
 
-        --------Background
-        row.background = display.newImageRect ("images2/scr3/s3_news_line.png", 320, 80);
-        row:insert( row.background )
-        row.background:setReferencePoint( display.TopLeftReferencePoint )
-        row.background.x, row.background.y = 0 , 0;
-        -------------Image
-        local imageName = dataA.image
-        if imageName and imageName ~= "" then
-            row.img = display.newImageRect ( directorParams2.tableName .. "/" ..  imageName, system.DocumentsDirectory, imgHeight,  imgWidth)
-            row.img.x = imgWidth/2 + 5
-            row.img.y = row.contentHeight * 0.5
-            row:insert( row.img )
-        else
-            row.img = {width = 0}
+            if not row.isCategory then rowGroup.alpha = 0.5; end
+
+        elseif event.phase == "swipeLeft" then
+                print( "Swiped left." )
+
+        elseif event.phase == "swipeRight" then
+                print( "Swiped right." )
+
+        elseif event.phase == "release" then
+
+                if not row.isCategory then
+                        -- reRender property tells row to refresh if still onScreen when content moves
+                        row.reRender = true
+                        print( "You touched row #" .. event.index )
+                end
         end
-        -------------Caption
-        row.caption = display.newRetinaText( row, dataA.date .. ": " .. dataA.caption, 0, 0, native.systemFontBold, 12 )
-        row.caption:setTextColor( color )
-        row.caption:setReferencePoint( display.CenterLeftReferencePoint )
-        row.caption.x, row.caption.y = row.img.width + 15, row.caption.height * 0.5
-        row:insert( row.caption )
-        ----------------Text preview
-        local w = myW -(row.img.width + 27)
-        local w2
-        if row.img.width == 0 then w2 = 8 else w2 = row.img.width + 12 end
-        row.txtPreview = display.newText( row, dataA.shortTxt,w2,row.caption.height +10, w, 0,  native.systemFont, 10 )
-        row.txtPreview:setTextColor( color )
-        row:insert( row.txtPreview )
-        row.txtPreview:setReferencePoint( display.TopLeftReferencePoint )
-    end
-    local list
 
-    local function onRowTouch( event )
-        local row = event.row
-        local background = event.background
-        print("onRowTouch(): list2Show_i[event.row.index].id " .. list2Show_i[event.row.index].id )
-        --        local dataA = list2Show[event.id]
-        local dataA = list2Show[list2Show_i[event.row.index].id]
+        return true
+end
 
-
-        if event.phase == "press" then
-            background:setFillColor( 0, 110, 233, 255 )
-
-        elseif event.phase == "release" or event.phase == "tap" then
-            --Update the item selected text
-            itemSelected.text =  dataA.txt
-            itemHeader.text  = dataA.caption
-            itemHeader.y  = 80
-
-
-            itemSelected.y = itemSelected.contentHeight * 0.5 + itemHeader.contentHeight  + 80
-            transition.to( list, { x = - list.contentWidth, time = 400, transition = easing.outExpo } )
-            transition.to( itemSelected, { x = display.contentCenterX, time = 400, transition = easing.outExpo } )
-            transition.to( itemHeader, { x = display.contentCenterX, time = 400, transition = easing.outExpo } )
-
-            currentScreen = "OneItem"
-            print( "Tapped and/or Released row: " .. row.index )
-            print("_W", _W)
-            print("list.x", list.x)
-            row.reRender = true
+-- onRender listener for the tableView
+local function onRowRender( event )
+        local row = event.target
+        local rowGroup = event.view
+				
+		 --------Background
+        row.background = display.newImageRect ("images/common/bg-row.png", 300, 111);
+		row.background:setReferencePoint( display.TopLeftReferencePoint )
+        row.background.x = 0
+        row.background.y = 0
+        rowGroup:insert( row.background )
+			
+		
+		local text = display.newRetinaText( "Image #" .. event.index, 12, 0, "Helvetica-Bold", 18 )
+        text:setReferencePoint( display.CenterLeftReferencePoint )
+        text.y = row.height * 0.5
+		
+        if not row.isCategory then
+                text.x = 15
+                text:setTextColor( 0 )
         end
-    end
 
-    if iPhone5 then
-        list = widget.newTableView{
-            width = 320,
-            height = 523,
-            hideBackground = true,
-            onRowRender = onRowRender,
-            onRowTouch = onRowTouch,
-            maskFile = "images2/mask-320x523.png"
-        }
-    else
-        list = widget.newTableView{
-            width = 320,
-            height = 435,
-            hideBackground = true,
-            onRowRender = onRowRender,
-            onRowTouch = onRowTouch,
-            maskFile = "images2/mask-320x435.png"
-        }
-    end
-    list.y = mainListOffset
+        -- must insert everything into event.view:
+        rowGroup:insert( text )
+end
 
-    local count = 1
-    for k,v in pairs(list2Show) do
-        list2Show_i[count] = v
-        print("count = " .. count, "ID  =  " .. k)
+-- Create 100 rows, and two categories to the tableView:
+for i=1,4 do
+        local rowHeight, rowColor, lineColor, isCategory
+		rowHeight = 110
+        -- function below is responsible for creating the row
         list:insertRow{
-            id = k,
-            rowHeight  = rowHeight,
-            rowColor = { 255, 255, 255, 0 }
+                onEvent=onRowTouch,
+                onRender=onRowRender,
+                height=rowHeight,
+                isCategory=isCategory,
+                rowColor=rowColor,
+                lineColor=lineColor
         }
-        count = count + 1
-    end
+
+end
 ---======BACK BUTTON
     --Handle the back button release event
     local function onBackRelease()
@@ -185,16 +155,18 @@ function new(directorParams)
     end
     --Create the back button
     local backButton = widget.newButton{
-        defaultFile = "images2/back.png",
-        overFile = "images2/back.png",
-        width = 60, height = 44,
-        left = 0,
-        top = 0,
+        default = "images/common/button-back.png", 
+        over = "images/common/button-back-pressed.png",
+        width = 25, height = 20,
+        left = 10,
+        top = 13,
         onRelease = onBackRelease
     }
     --Insert widgets/images into a group
     localGroup:insert( list )
+	localGroup:insert(logoImage)
+	localGroup:insert(screenHeader)
     localGroup:insert( backButton )
+	
     return localGroup;
 end
-
