@@ -1,4 +1,3 @@
-
 module(..., package.seeall)
 ----------Modules
 local widget = require "widget"
@@ -104,22 +103,22 @@ function new(directorParams)
     ------
     buttons["btnSched"] = {}
     buttons["btnSched"].iconFile = "images/scr_main/main-schedule.png"
-    buttons["btnSched"].text = "Расписание"
+    buttons["btnSched"].text = "schedule"
     buttons["btnSched"].y = 50
     ------
     buttons["btnPhoto"] = {}
     buttons["btnPhoto"].iconFile = "images/scr_main/main-photo.png"
-    buttons["btnPhoto"].text = "Фотографии"
+    buttons["btnPhoto"].text = "Photos"
     buttons["btnPhoto"].y = 100
     ------
     buttons["btnServices"] = {}
     buttons["btnServices"].iconFile = "images/scr_main/main-services.png"
-    buttons["btnServices"].text = "Услуги"
+    buttons["btnServices"].text = "Services"
     buttons["btnServices"].y = 150
     ------
     buttons["btnContacts"] = {}
     buttons["btnContacts"].iconFile = "images/scr_main/main-contacts.png"
-    buttons["btnContacts"].text = "Контакты"
+    buttons["btnContacts"].text = "Team"
     buttons["btnContacts"].y = 200
     ------
     for k,v in pairs(buttons) do
