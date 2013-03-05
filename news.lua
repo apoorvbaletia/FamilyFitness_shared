@@ -1,5 +1,5 @@
 module(..., package.seeall)
-local widget = require "widget"
+local widget = require "widget1"
 ---------- Predefined variables
 local dbFilename = "db.sqlite"
 local currentScreen = "ItemList"
@@ -9,9 +9,9 @@ local list2Show = {}
 --Positioning prams
 local screenHeader_y  = 21
 local mainListOffset = 45
-local rowHeight = 80
-local imgHeight = 70
-local imgWidth = 70
+local rowHeight = 110
+local imgHeight = 80
+local imgWidth = 80
 local _H = display.contentHeight;
 local _W = display.contentWidth;
 
@@ -32,10 +32,10 @@ function new(directorParams)
     bg.x, bg.y = 0,0;
     localGroup:insert(bg);
     --topbar
-    local logoImage = display.newImage ("images/common/top-bar.png");
-    logoImage:setReferencePoint( display.TopCenterReferencePoint )
-    logoImage.x = display.contentCenterX
-    logoImage.y = 0
+    local topbarImage = display.newImage ("images/common/top-bar.png");
+    topbarImage:setReferencePoint( display.TopCenterReferencePoint )
+    topbarImage.x = display.contentCenterX
+    topbarImage.y = 0
     
 
     ---Header text
@@ -45,100 +45,153 @@ function new(directorParams)
     screenHeader.x, screenHeader.y = _W/2 , screenHeader_y;
     
     ---One-item-screen elements, by default are located outside of the screen
-    local itemHeader = display.newText( "InitialHeader", 0, 0, _W, 0, native.systemFontBold, 16)
-    itemHeader.x = 1.5 * _W
+    local itemHeader = display.newText( "lotsOfText", 0, 0, 0, 0, "Helvetica", 20)
+    itemHeader.x = display.contentWidth + 0.5 * display.contentWidth
+    itemHeader.y = 65
     localGroup:insert( itemHeader )
 
-    local itemSelected = display.newText( "Initial Description", 0, 0, _W - 15, 0, native.systemFont, 12)
-    itemSelected.x = 1.5 * _W
-    localGroup:insert( itemSelected )
+    local itemSelected = display.newText( "lotsOfText", 0, 0, _W-50, 0, "Helvetica", 12)
+    itemSelected.x = display.contentWidth + itemSelected.contentWidth * 0.5
+    itemSelected.y = itemSelected.contentHeight * 0.5
+    localGroup:insert( itemSelected )   
+	
     ---========Createmain Table view
     local listOptions = {
         
         height = 445,
-    	width = 300,
+		width = 300,
         maskFile = "mask-320x366.png"
     }
 
     local list = widget.newTableView( listOptions )
     list:setReferencePoint( display.CenterReferencePoint )
 	list.x = (display.contentWidth * 0.5) 
-    list.y = 20 + display.contentHeight * 0.5
+    list.y = 26 + display.contentHeight * 0.5
 	
--- onEvent listener for the tableView
-local function onRowTouch( event )
-        local row = event.target
+ local function onRowRender( event )
+        local row = event.row
         local rowGroup = event.view
-		local background = event.background
-		
-		if event.phase == "press" then
-		print( "Pressed row: " .. row.index )
-		background:setFillColor( 0, 110, 233, 255 ) 
-        end
-		
-        if event.phase == "press" then  
+        local label = "List item "
+        local color = 255
+        local path = system.pathForFile( "", system.DocumentsDirectory )
 
-            if not row.isCategory then rowGroup.alpha = 0.5; end
+        local myW = rowGroup.contentWidth
+        local myH = rowGroup.contentHeigth
+        local imageName = list2Show[event.id].image
+        ------------background
 
-        elseif event.phase == "swipeLeft" then
-                print( "Swiped left." )
-
-        elseif event.phase == "swipeRight" then
-                print( "Swiped right." )
-
-        elseif event.phase == "release" then
-
-                if not row.isCategory then
-                        -- reRender property tells row to refresh if still onScreen when content moves
-                        row.reRender = true
-                        print( "You touched row #" .. event.index )
-                end
-        end
-
-        return true
-end
-
--- onRender listener for the tableView
-local function onRowRender( event )
-        local row = event.target
-        local rowGroup = event.view
-				
-		 --------Background
         row.background = display.newImageRect ("images/common/bg-row.png", 300, 111);
 		row.background:setReferencePoint( display.TopLeftReferencePoint )
         row.background.x = 0
         row.background.y = 0
         rowGroup:insert( row.background )
-			
-		
-		local text = display.newRetinaText( "Image #" .. event.index, 12, 0, "Helvetica-Bold", 18 )
-        text:setReferencePoint( display.CenterLeftReferencePoint )
-        text.y = row.height * 0.5
-		
-        if not row.isCategory then
-                text.x = 15
-                text:setTextColor( 0 )
+        -----------Image
+        local imageName = list2Show[event.id].image
+        if imageName and imageName ~= "" then
+            row.img = display.newImageRect ( directorParams2.tableName .. "/" ..  imageName, system.DocumentsDirectory, imgHeight,  imgWidth)
+            row.img.x = imgWidth/2 + 10
+            row.img.y = rowGroup.contentHeight * 0.5
+            rowGroup:insert( row.img )
+        else
+            row.img = {width = 0}
+        end
+    -------------Caption
+    row.caption = display.newRetinaText( rowGroup,  list2Show[event.id].caption, 0, 0, native.systemFontBold, 18)
+    row.caption:setTextColor( 255,140,0 )
+    row.caption:setReferencePoint( display.CenterLeftReferencePoint )
+    row.caption.x, row.caption.y = row.img.width + 18, 5 + row.caption.height * 0.5
+    rowGroup:insert( row.caption )
+
+    ----------------Text preview
+    local w = myW -(row.img.width + 28)
+    local w2
+    if row.img.width == 0 then w2 = 8 else w2 = row.img.width + 18 end
+
+    row.txtPreview = display.newText( rowGroup, list2Show[event.id].shortTxt,w2,row.caption.height + 5 , w, 0,  native.systemFont, 12 )
+    row.txtPreview:setTextColor( 0,0,0 )
+    rowGroup:insert( row.txtPreview )
+    row.txtPreview:setReferencePoint( display.TopLeftReferencePoint )
+
+    ----------------Arrow
+    row.arrow = display.newImage( "images/common/arrow.png", false )
+    row.arrow.x = rowGroup.contentWidth - row.arrow.contentWidth * 2
+    row.arrow.y = rowGroup.contentHeight * 0.5
+    rowGroup:insert( row.arrow )
+    end
+
+    --Handle the back button release event
+    local function onBackRelease()
+        --Transition in the list, transition out the item selected text and the back button
+        local params = {}
+        if currentScreen == "ItemList" then
+            director:changeScene(params, "menu", "moveFromLeft");
+        elseif currentScreen == "OneItem" then
+            transition.to( list, { x = 160, time = 400, transition = easing.outExpo } )
+            transition.to( itemSelected, { x = display.contentWidth + itemSelected.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
+            transition.to( itemHeader, { x = display.contentWidth + itemHeader.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
+            currentScreen = "ItemList"
+            transition.to( bigPicture, { x = 2*_W, time = 400, transition = easing.outExpo } )
+
         end
 
-        -- must insert everything into event.view:
-        rowGroup:insert( text )
-end
 
--- Create 100 rows, and two categories to the tableView:
-for i=1,4 do
-        local rowHeight, rowColor, lineColor, isCategory
-		rowHeight = 110
-        -- function below is responsible for creating the row
+    end
+
+     --Handle row touch events
+    local function onRowTouch( event )
+        local row = event.row
+        local background = event.background
+
+        if event.phase == "press" then
+
+        elseif event.phase == "release" or event.phase == "tap" then
+
+            if bigPicture ~= nil then
+                bigPicture:removeSelf()
+            end
+
+            ----------Big picture
+            bigPicture = display.newImage (directorParams2.tableName .. "/" ..  list2Show[event.id].image, system.DocumentsDirectory, 0, 0, true);
+            bigPicture:setReferencePoint( display.TopCenterReferencePoint )
+            bigPicture.x = display.contentCenterX + _W*2
+            bigPicture.y = 90
+
+            transition.to( bigPicture, { x = display.contentCenterX, time = 400, transition = easing.outExpo } )
+
+            --Update the item selected text
+            itemSelected.text =  list2Show[event.id].txt
+            itemHeader.text  = list2Show[event.id].caption
+
+            itemSelected:setReferencePoint( display.TopCenterReferencePoint )
+
+            itemSelected.y = bigPicture.contentHeight  + itemHeader.contentHeight + 80
+            transition.to( list, { x = - 2*_W, time = 400, transition = easing.outExpo } )
+            transition.to( itemSelected, { x = display.contentCenterX, time = 400, transition = easing.outExpo } )
+            transition.to( itemHeader, { x = display.contentCenterX, time = 400, transition = easing.outExpo } )
+
+            currentScreen = "OneItem"
+            row.reRender = true
+        end
+    end
+    --Insert elements into list
+    local sqlite3 =require("sqlite3")
+    local path = system.pathForFile( dbFilename, system.DocumentsDirectory )
+    local db = sqlite3.open( path )
+    local row2
+    local SQL = "SELECT rowid, fCaption, fText, fImageName, fShortText from " .. directorParams2.tableName --.. " ORDER BY fDate DESC"
+    print("Tablelist SQL: ", SQL)
+    for row2 in db:nrows(SQL) do
+        list2Show["ID_" .. row2.rowid] = {caption = row2.fCaption, image = row2.fImageName, txt = row2.fText }
+        list2Show["ID_" .. row2.rowid].shortTxt = row2.fShortText
         list:insertRow{
-                onEvent=onRowTouch,
-                onRender=onRowRender,
-                height=rowHeight,
-                isCategory=isCategory,
-                rowColor=rowColor,
-                lineColor=lineColor
+            id = "ID_" .. row2.rowid,
+            height = rowHeight,
+            rowColor = { 255, 255, 255, 0 },
+            onRender = onRowRender,
+            listener = onRowTouch
         }
-
-end
+    end
+    db:close()
 ---======BACK BUTTON
     --Handle the back button release event
     local function onBackRelease()
@@ -147,26 +200,27 @@ end
         if currentScreen == "ItemList" then
             director:changeScene(params, "menu", "moveFromLeft");
         elseif currentScreen == "OneItem" then
-            transition.to( list, { x = 0, time = 400, transition = easing.outExpo } )
+            transition.to( list, { x = 160, time = 400, transition = easing.outExpo } )
             transition.to( itemSelected, { x = display.contentWidth + itemSelected.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
             transition.to( itemHeader, { x = display.contentWidth + itemHeader.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
             currentScreen = "ItemList"
+            transition.to( bigPicture, { x = 2*_W, time = 400, transition = easing.outExpo } )
         end
     end
+	
     --Create the back button
     local backButton = widget.newButton{
         default = "images/common/button-back.png", 
         over = "images/common/button-back-pressed.png",
-        width = 25, height = 20,
+        width = 25, height = 18,
         left = 10,
         top = 13,
         onRelease = onBackRelease
     }
     --Insert widgets/images into a group
     localGroup:insert( list )
-	localGroup:insert(logoImage)
+	localGroup:insert(topbarImage)
 	localGroup:insert(screenHeader)
     localGroup:insert( backButton )
-	
     return localGroup;
 end
